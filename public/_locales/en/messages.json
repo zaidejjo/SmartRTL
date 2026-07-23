@@ -1,0 +1,58 @@
+{
+  "extName": {
+    "message": "SmartRTL",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Fixes text direction on AI tools.",
+    "description": "Extension description"
+  },
+  "directionMode": {
+    "message": "Direction Mode",
+    "description": "Section header for direction modes"
+  },
+  "autoDetect": {
+    "message": "Auto",
+    "description": "Auto detect mode label"
+  },
+  "autoDesc": {
+    "message": "RTL for Arabic text, LTR for English",
+    "description": "Auto detect description"
+  },
+  "forceRtl": {
+    "message": "Force RTL",
+    "description": "Force RTL mode label"
+  },
+  "forceRtlDesc": {
+    "message": "Set right-to-left for all content",
+    "description": "Force RTL description"
+  },
+  "forceLtr": {
+    "message": "Force LTR",
+    "description": "Force LTR mode label"
+  },
+  "forceLtrDesc": {
+    "message": "Set left-to-right for all content",
+    "description": "Force LTR description"
+  },
+  "chooseLanguage": {
+    "message": "Choose Language",
+    "description": "Language selector label"
+  },
+  "langEn": {
+    "message": "English",
+    "description": "English language option"
+  },
+  "langAr": {
+    "message": "العربية",
+    "description": "Arabic language option"
+  },
+  "codeProtection": {
+    "message": "Code blocks locked to LTR",
+    "description": "Code protection info note"
+  },
+  "settingsSaved": {
+    "message": "Settings saved",
+    "description": "Saved toast notification"
+  }
+}
