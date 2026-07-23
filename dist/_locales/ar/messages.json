@@ -7,6 +7,18 @@
     "message": "Fixes text direction on AI tools.",
     "description": "Extension description"
   },
+  "extensionStatus": {
+    "message": "حالة الإضافة",
+    "description": "Status label for On/Off switch"
+  },
+  "statusEnabled": {
+    "message": "مفعل",
+    "description": "Enabled state"
+  },
+  "statusDisabled": {
+    "message": "معطل",
+    "description": "Disabled state"
+  },
   "directionMode": {
     "message": "وضع الاتجاه",
     "description": "Section header for direction modes"

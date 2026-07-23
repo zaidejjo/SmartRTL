@@ -19,7 +19,16 @@
       </div>
     </header>
 
-    <main class="main-content">
+    <!-- ON/OFF Master Toggle -->
+    <div class="status-row">
+      <span class="section-label">{{ t('extensionStatus') }}</span>
+      <button class="power-btn" :class="{ active: isEnabled }" @click="toggleEnabled">
+        <Power :size="13" stroke-width="2.5" />
+        <span>{{ isEnabled ? t('statusEnabled') : t('statusDisabled') }}</span>
+      </button>
+    </div>
+
+    <main class="main-content" :class="{ disabled: !isEnabled }">
       <div class="section-label">{{ t('directionMode') }}</div>
       <div class="segmented-control">
         <button
@@ -27,6 +36,7 @@
           :key="mode.id"
           class="segment-btn"
           :class="{ active: currentMode === mode.id }"
+          :disabled="!isEnabled"
           @click="selectMode(mode.id)"
         >
           {{ t(mode.labelKey) }}
@@ -50,10 +60,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { ArrowLeftRight, Code, Sun, Moon } from 'lucide-vue-next';
+import { ArrowLeftRight, Code, Sun, Moon, Power } from 'lucide-vue-next';
 
 const uiLang = ref('en');
 const theme = ref('dark');
+const isEnabled = ref(true);
 
 const themeClass = computed(() => {
   return theme.value === 'dark' ? 'theme-dark' : 'theme-light';
@@ -62,6 +73,9 @@ const themeClass = computed(() => {
 const dict = {
   en: {
     extName: 'SmartRTL',
+    extensionStatus: 'Status',
+    statusEnabled: 'Enabled',
+    statusDisabled: 'Disabled',
     directionMode: 'Direction Mode',
     autoDetect: 'Auto',
     forceRtl: 'Force RTL',
@@ -71,6 +85,9 @@ const dict = {
   },
   ar: {
     extName: 'SmartRTL',
+    extensionStatus: 'الحالة',
+    statusEnabled: 'مفعل',
+    statusDisabled: 'معطل',
     directionMode: 'وضع الاتجاه',
     autoDetect: 'تلقائي',
     forceRtl: 'فرض RTL',
@@ -104,7 +121,8 @@ function showToast(msg) {
 
 onMounted(() => {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(['smartRtlMode', 'smartRtlLang', 'smartRtlTheme'], (result) => {
+    chrome.storage.local.get(['smartRtlEnabled', 'smartRtlMode', 'smartRtlLang', 'smartRtlTheme'], (result) => {
+      if (result.smartRtlEnabled !== undefined) isEnabled.value = result.smartRtlEnabled;
       if (result.smartRtlMode) currentMode.value = result.smartRtlMode;
       if (result.smartRtlLang) uiLang.value = result.smartRtlLang;
       if (result.smartRtlTheme) {
@@ -117,6 +135,17 @@ onMounted(() => {
     });
   }
 });
+
+function toggleEnabled() {
+  isEnabled.value = !isEnabled.value;
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set({ smartRtlEnabled: isEnabled.value }, () => {
+      showToast(t('settingsSaved'));
+    });
+  } else {
+    showToast(t('settingsSaved'));
+  }
+}
 
 function toggleTheme() {
   theme.value = theme.value === 'dark' ? 'light' : 'dark';
@@ -133,6 +162,7 @@ function changeLanguage(lang) {
 }
 
 function selectMode(modeId) {
+  if (!isEnabled.value) return;
   currentMode.value = modeId;
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     chrome.storage.local.set({ smartRtlMode: modeId }, () => {
@@ -187,7 +217,7 @@ body {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -195,7 +225,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -258,10 +288,43 @@ body {
   background-color: var(--hover-bg);
 }
 
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.power-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.power-btn.active {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border-color: var(--accent-bg);
+}
+
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.main-content.disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .section-label {
@@ -296,7 +359,7 @@ body {
   white-space: nowrap;
 }
 
-.segment-btn:hover {
+.segment-btn:hover:not(:disabled) {
   color: var(--text-main);
 }
 

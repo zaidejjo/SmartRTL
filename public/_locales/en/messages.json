@@ -7,6 +7,18 @@
     "message": "Fixes text direction on AI tools.",
     "description": "Extension description"
   },
+  "extensionStatus": {
+    "message": "Extension Status",
+    "description": "Status label for On/Off switch"
+  },
+  "statusEnabled": {
+    "message": "Enabled",
+    "description": "Enabled state"
+  },
+  "statusDisabled": {
+    "message": "Disabled",
+    "description": "Disabled state"
+  },
   "directionMode": {
     "message": "Direction Mode",
     "description": "Section header for direction modes"
@@ -52,7 +64,7 @@
     "description": "Code protection info note"
   },
   "settingsSaved": {
-    "message": "Settings saved",
+    "message": "Saved",
     "description": "Saved toast notification"
   }
 }

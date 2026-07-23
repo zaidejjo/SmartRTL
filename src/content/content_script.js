@@ -1,12 +1,13 @@
 /**
  * SmartRTL Content Script (Manifest V3)
- * Zero-latency instant text direction correction for AI chat tools.
+ * Zero-latency instant text direction correction with ON/OFF master state check.
  */
 
 (function () {
   'use strict';
 
   let currentMode = 'auto';
+  let isEnabled = true;
   const ARABIC_REGEX = /\p{Script=Arabic}/u;
 
   const LEAF_TEXT_SELECTOR = 'p, li, h1, h2, h3, h4, h5, h6, textarea, [contenteditable="true"]';
@@ -43,6 +44,15 @@
     if (isExcluded(el)) return;
 
     const isInput = el.tagName === 'TEXTAREA' || el.getAttribute('contenteditable') === 'true';
+
+    // If disabled, reset styles back to default
+    if (!isEnabled) {
+      el.style.direction = '';
+      el.style.textAlign = '';
+      if (isInput) el.removeAttribute('dir');
+      return;
+    }
+
     const text = isInput ? (el.value || el.innerText || '') : (el.innerText || el.textContent || '');
 
     if (isCodeSnippet(text)) {
@@ -82,12 +92,11 @@
     }
   }
 
-  // Instant MutationObserver with ZERO latency / no debouncing
   const observer = new MutationObserver((mutations) => {
+    if (!isEnabled) return;
     for (let m = 0; m < mutations.length; m++) {
       const mut = mutations[m];
       
-      // If text content changed directly on an element
       if (mut.type === 'characterData' && mut.target && mut.target.parentNode) {
         const parentEl = mut.target.parentNode;
         if (parentEl.nodeType === Node.ELEMENT_NODE && parentEl.matches && parentEl.matches(LEAF_TEXT_SELECTOR)) {
@@ -95,7 +104,6 @@
         }
       }
 
-      // If new nodes were added
       for (let n = 0; n < mut.addedNodes.length; n++) {
         const node = mut.addedNodes[n];
         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -119,8 +127,8 @@
     });
   }
 
-  // Instant keystroke event listeners for prompt fields
   document.addEventListener('input', (e) => {
+    if (!isEnabled) return;
     const target = e.target;
     if (target && target.nodeType === Node.ELEMENT_NODE && (target.tagName === 'TEXTAREA' || target.getAttribute('contenteditable') === 'true')) {
       processElement(target);
@@ -128,35 +136,47 @@
   }, true);
 
   document.addEventListener('keyup', (e) => {
+    if (!isEnabled) return;
     const target = e.target;
     if (target && target.nodeType === Node.ELEMENT_NODE && (target.tagName === 'TEXTAREA' || target.getAttribute('contenteditable') === 'true')) {
       processElement(target);
     }
   }, true);
 
-  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.get(['smartRtlMode'], (result) => {
-      if (result.smartRtlMode) {
-        currentMode = result.smartRtlMode;
-      }
-      scanAndApply();
-    });
-
-    chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'local' && changes.smartRtlMode) {
-        currentMode = changes.smartRtlMode.newValue;
+  function loadSettingsAndApply() {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['smartRtlEnabled', 'smartRtlMode'], (result) => {
+        if (result.smartRtlEnabled !== undefined) {
+          isEnabled.value = result.smartRtlEnabled;
+          isEnabled = result.smartRtlEnabled;
+        }
+        if (result.smartRtlMode) {
+          currentMode = result.smartRtlMode;
+        }
         scanAndApply();
-      }
-    });
+      });
+
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local') {
+          if (changes.smartRtlEnabled) {
+            isEnabled = changes.smartRtlEnabled.newValue;
+          }
+          if (changes.smartRtlMode) {
+            currentMode = changes.smartRtlMode.newValue;
+          }
+          scanAndApply();
+        }
+      });
+    }
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      scanAndApply();
+      loadSettingsAndApply();
       startObserving();
     });
   } else {
-    scanAndApply();
+    loadSettingsAndApply();
     startObserving();
   }
 
